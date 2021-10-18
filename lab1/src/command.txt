@@ -1,0 +1,9 @@
+create 'test1','cf'
+put 'test1','20130101#1', 'cf:sales','100'
+put 'test1','20130101#2', 'cf:sales','110'
+put 'test1','20130102#1', 'cf:sales','200'
+put 'test1','20130102#2', 'cf:sales','210'
+
+create 'test2','cf'
+scan 'test1'
+scan 'test2'

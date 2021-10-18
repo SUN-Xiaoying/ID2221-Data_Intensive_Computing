@@ -1,0 +1,5 @@
+In addition to mapper and reducer classes, we need a driver class to trigger the MapReduce job in Hadoop.
+In the driver class, we provide the name of the job, output key-value data types and the mapper and reducer
+classes. Bellow you see the complete code of the word count. Here, we assume there are two input files,
+file0 and file1, uploaded on HDFS, and our code reads those files and counts their words. Then, we
+should go through the following steps to compile and run the code

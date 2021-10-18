@@ -1,0 +1,7 @@
+# SPARK
+.bsp/
+.cache
+.project
+.scala_dependencies
+target/
+project/

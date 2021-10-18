@@ -1,0 +1,10 @@
+spark   2.4.3
+scala   2.11.12
+hbase   1.4.10
+kafka   2.0.
+
+https://github.com/velix/ID2221_assignments_2018
+
+https://github.com/XingZeng307/KTH_Projects/tree/99bb0c1a955754cb1bbbf145855e79beb33561f7/ID2221%20Data%20intensive%20computing
+
+https://stackoverflow.com/questions/50064661/how-to-find-the-number-of-vertex-that-are-reachable-from-a-given-vertex-in-spark
