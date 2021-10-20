@@ -13,7 +13,9 @@ object Main {
   def writeFile(filename: String, lines: Seq[String]): Unit = {
     val file = new File(filename)
     val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(s"srcId\tshortest\tpath\n")
     for (line <- lines) {
+      if(!line.contains(s"${Double.MaxValue}"))
         bw.write(line)
     }
     bw.close()
@@ -22,46 +24,53 @@ object Main {
   def dijkstra[VD](g:Graph[VD,Double], origin:VertexId) = {
     //Initialize the table
     var g2 = g.mapVertices(
-      (vid, _)=>(false, if(vid == origin) 0 else Double.MaxValue)
+      (vid, _)=>(false, if(vid == origin) 0 else Double.MaxValue,List[VertexId]())
     )
     // g.vertices.collect.foreach(println)
 
     for(i <- 1L to g.vertices.count-1){
       val currentVertexId = 
         g2.vertices.filter(!_._2._1)
-          .fold((0L,(false, Double.MaxValue)))(
+          .fold((0L,(false, Double.MaxValue, List[VertexId]())))(
             (a,b) => if(a._2._2 < b._2._2) a else b)
           ._1
         
       val newDistances = 
-        g2.aggregateMessages[Double](
-          ctx => if(ctx.srcId == currentVertexId){
-            ctx.sendToDst(ctx.srcAttr._2 + ctx.attr)
-          },
-          (a,b)=>math.min(a,b)
+        g2.aggregateMessages[(Double,List[VertexId])](
+          ctx => if(ctx.srcId == currentVertexId)
+            ctx.sendToDst((ctx.srcAttr._2 + ctx.attr, 
+              ctx.srcAttr._3 :+ ctx.srcId)),
+          (a,b) => if (a._1 < b._1) a else b
         )
 
-      g2 = g2.outerJoinVertices(newDistances)((vid, vd, newSum)=> 
+      g2 = g2.outerJoinVertices(newDistances)((vid, vd, newSum)=> {
+        val newSumVal =
+          newSum.getOrElse((Double.MaxValue,List[VertexId]()))
         (vd._1 || vid == currentVertexId,
-          math.min(vd._2, newSum.getOrElse(Double.MaxValue))
-        )
+        math.min(vd._2, newSumVal._1),
+        if (vd._2 < newSumVal._1) vd._3 else newSumVal._2)}
       )
     }
     // g2.vertices.collect.foreach(i => println("G2: "+i+"\n"))
 
-    g.outerJoinVertices(g2.vertices)((vid, vd, dist) => 
-      (vd, dist.getOrElse((false, Double.MaxValue))._2)
-    )
+    g.outerJoinVertices(g2.vertices)((vid, vd, dist) =>
+      (vd, dist.getOrElse((false,Double.MaxValue,List[VertexId]()))
+        .productIterator.toList.tail))
   }
   // remove paralyzed node from the graph
   def removeSingleNode[VD](g:Graph[VD,Double], miss:VertexId) = {
     // Remove missing vertices as well as the edges to connected to them
     val validGraph = g.subgraph(vpred = (id, attr) => id != miss)
     var results:Seq[String] = List[String]()
-    dijkstra(g, 1L).vertices.map(_._2).collect.foreach(
-      r => results = results :+ s"${r._1}\t${r._2}\n"
+    
+    dijkstra(validGraph, 1L).vertices.map(_._2).collect.foreach(
+      r => {
+        val arr = r._2.toArray
+        val path = arr(1).asInstanceOf[List[String]].mkString("->")
+        results = results :+ s"${r._1}\t\t${arr(0)}\t\t${path}\n"
+      }
     )
-    writeFile("paralyzed.txt",results)
+    writeFile("d_paralyzed.txt",results)
   }
 
   def main(args: Array[String]){
@@ -106,9 +115,14 @@ object Main {
     var results:Seq[String] = List[String]()
     
     dijkstra(myGraph, 1L).vertices.map(_._2).collect.foreach(
-      r => results = results :+ s"${r._1}\t${r._2}\n"
+      r => {
+        val arr = r._2.toArray
+        val path = arr(1).asInstanceOf[List[String]].mkString("->")
+        results = results :+ s"${r._1}\t\t${arr(0)}\t\t${path}\n"
+      }
     )
-    writeFile("init.txt",results)
+    writeFile("d_init.txt",results)
+
     // Test: Paralyzed Nodes
     removeSingleNode(myGraph, 5L)
   }
