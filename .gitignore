@@ -5,3 +5,4 @@
 .scala_dependencies
 target/
 project/
+*.txt
