@@ -81,22 +81,103 @@ object Main {
           (4L, "N4"),
           (5L, "N5"),
           (6L, "N6"),
-          (7L, "N7")
+          (7L, "N7"),
+          (8L, "N8"),
+          (9L, "N9"),
+          (10L, "N10"),
+          (11L, "N11"),
+          (12L, "N12"),
+          (13L, "N13"),
+          (14L, "N14"),
+          (15L, "N15"),
+          (16L, "N16"),
+          (17L, "N17"),
+          (18L, "N18"),
+          (19L, "N19"),
+          (20L, "N20"),
+          (21L, "N21"),
+          (22L, "N22"),
+          (23L, "N23"),
+          (24L, "N24"),
+          (25L, "N25"),
+          (26L, "N26"),
+          (27L, "N27"),
+          (28L, "N28")
         ))
 
     // Create an RDD for edges
     val edges: RDD[Edge[Double]] =
         sc.parallelize(Seq(
-            Edge(1L, 2L, 7.0),    
-            Edge(1L, 4L, 5.0),
-            Edge(2L, 3L, 8.0), 
-            Edge(2L, 4L, 9.0),
-            Edge(2L, 5L, 7.0), 
-            Edge(3L, 5L, 5.0), 
-            Edge(4L, 5L, 15.0), 
-            Edge(5L, 6L, 8.0), 
-            Edge(5L, 7L, 9.0),
-            Edge(6L, 7L, 11.0)  
+            Edge(2L, 1L, 150.0), 
+            Edge(2L, 3L, 70.0), 
+            Edge(2L, 8L, 90.0), 
+        
+            Edge(3L, 1L, 120.0), 
+            
+            Edge(4L, 3L, 75.0), 
+            Edge(4L, 9L, 100.0), 
+            Edge(4L, 10L, 70.0), 
+            
+            Edge(5L, 1L, 180.0), 
+            Edge(5L, 12L, 80.0), 
+            
+            Edge(6L, 1L, 200.0), 
+            Edge(6L, 3L, 130.0), 
+            Edge(6L, 4L, 110.0), 
+            Edge(6L, 5L, 60.0), 
+            Edge(6L, 12L, 90.0), 
+            
+            Edge(7L, 14L, 125.0),
+            
+            Edge(8L, 9L, 60.0),
+            
+            Edge(9L, 13L, 100.0),
+            
+            Edge(10L, 4L, 70.0),
+            Edge(10L, 9L, 75.0),
+            Edge(10L, 11L, 150.0),
+        
+            Edge(11L, 12L, 325.0),
+            Edge(11L, 13L, 325.0),
+            Edge(11L, 15L, 100.0),
+            
+            Edge(12L, 11L, 75.0),
+            Edge(12L, 15L, 75.0),
+            
+            Edge(15L, 16L, 75.0),
+            
+            Edge(17L, 7L, 200.0),
+            
+            Edge(18L, 17L, 60.0),
+            
+            Edge(19L, 9L, 160.0),
+            Edge(19L, 18L, 75.0),
+            
+            Edge(20L, 10L, 95.0),
+            Edge(20L, 19L, 150.0),
+            Edge(20L, 21L, 100.0),
+            
+            Edge(21L, 11L, 140.0),
+            
+            Edge(22L, 11L, 175.0),
+            Edge(22L, 23L, 75.0),
+            
+            Edge(23L, 12L, 210.0),
+            Edge(23L, 22L, 65.0),
+            Edge(23L, 24L, 125.0),
+            
+            Edge(24L, 15L, 120.0),
+            
+            Edge(25L, 17L, 130.0),
+            Edge(25L, 26L, 70.0),
+            
+            Edge(26L, 17L, 135.0),
+            Edge(26L, 27L, 80.0),
+        
+            Edge(27L, 19L, 130.0),
+            Edge(27L, 28L, 150.0),
+            
+            Edge(28L, 21L, 80.0)  
         ))
 
     // Build the initial Graph
