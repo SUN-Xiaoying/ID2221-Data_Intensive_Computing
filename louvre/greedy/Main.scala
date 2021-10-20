@@ -5,28 +5,27 @@ import org.apache.spark.graphx._
 // To make some of the examples work we will also need RDD
 import org.apache.spark.rdd.RDD
 
+import java.io._
+
+
 object Main {
-
-  // remove paralyzed node from the graph
-  def removeSingleNode(g:Graph[VD, Double], miss:VertexId) = {
-    val validGraph = g.subgraph(vpred = (id, attr) => id != miss)
-    validGraph.vertices.collect.foreach(println)
+  //Write results in txt
+  def writeFile(filename: String, lines: Seq[String]): Unit = {
+    val file = new File(filename)
+    val bw = new BufferedWriter(new FileWriter(file))
+    for (line <- lines) {
+        bw.write(line)
+    }
+    bw.close()
   }
-
   // Find the shortest path by dijkstra algorithm
-  def dijkstra[VD](g:Graph[VD, Double], origin:VertexId) = {
+  def dijkstra[VD](g:Graph[VD,Double], origin:VertexId) = {
     //Initialize the table
     var g2 = g.mapVertices(
       (vid, _)=>(false, if(vid == origin) 0 else Double.MaxValue)
     )
     // g.vertices.collect.foreach(println)
-    // (4,(false,1.7976931348623157E308,List()))
-    // (6,(false,1.7976931348623157E308,List()))
-    // (2,(false,1.7976931348623157E308,List()))
-    // (1,(false,0.0,List()))
-    // (3,(false,1.7976931348623157E308,List()))
-    // (7,(false,1.7976931348623157E308,List()))
-    // (5,(false,1.7976931348623157E308,List()))
+
     for(i <- 1L to g.vertices.count-1){
       val currentVertexId = 
         g2.vertices.filter(!_._2._1)
@@ -48,13 +47,21 @@ object Main {
         )
       )
     }
-    g2.vertices.collect.foreach(i => println("G2: "+i+"\n"))
-
+    // g2.vertices.collect.foreach(i => println("G2: "+i+"\n"))
 
     g.outerJoinVertices(g2.vertices)((vid, vd, dist) => 
       (vd, dist.getOrElse((false, Double.MaxValue))._2)
     )
-    
+  }
+  // remove paralyzed node from the graph
+  def removeSingleNode[VD](g:Graph[VD,Double], miss:VertexId) = {
+    // Remove missing vertices as well as the edges to connected to them
+    val validGraph = g.subgraph(vpred = (id, attr) => id != miss)
+    var results:Seq[String] = List[String]()
+    dijkstra(g, 1L).vertices.map(_._2).collect.foreach(
+      r => results = results :+ s"${r._1}\t${r._2}\n"
+    )
+    writeFile("paralyzed.txt",results)
   }
 
   def main(args: Array[String]){
@@ -65,11 +72,9 @@ object Main {
 
     val sc = new SparkContext(conf)
 
-    // (1L, 0)...(7L, 0)
-    // val vertices: VertexRDD[Int] = 
-    //   VertexRDD(sc.parallelize(1L until 7L).map(id => (id, 0)))
+    // Create an RDD for vertices
     val vertices = 
-      sc.makeRDD(Array(
+      sc.makeRDD(Seq(
           (1L, "N1"), 
           (2L, "N2"),
           (3L, "N3"), 
@@ -78,9 +83,10 @@ object Main {
           (6L, "N6"),
           (7L, "N7")
         ))
+
     // Create an RDD for edges
     val edges: RDD[Edge[Double]] =
-        sc.parallelize(Array(
+        sc.parallelize(Seq(
             Edge(1L, 2L, 7.0),    
             Edge(1L, 4L, 5.0),
             Edge(2L, 3L, 8.0), 
@@ -94,9 +100,16 @@ object Main {
         ))
 
     // Build the initial Graph
-    // val graph: Graph[(String, Int), Int] = Graph(vertices, edges)
-    val myGraph:Graph[VD, Double] = Graph(vertices, edges)
-    removeSingleNode(myGraph, 1L)
-    // dijkstra(myGraph, 1L).vertices.map(_._2).collect.foreach(r => println("RESULT: "+r+"\n"))
+    val myGraph = Graph(vertices, edges)
+
+    // Test: Dijkstra 
+    var results:Seq[String] = List[String]()
+    
+    dijkstra(myGraph, 1L).vertices.map(_._2).collect.foreach(
+      r => results = results :+ s"${r._1}\t${r._2}\n"
+    )
+    writeFile("init.txt",results)
+    // Test: Paralyzed Nodes
+    removeSingleNode(myGraph, 5L)
   }
 }

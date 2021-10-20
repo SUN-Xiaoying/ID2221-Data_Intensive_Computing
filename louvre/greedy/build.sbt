@@ -8,5 +8,7 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "2.2.1",
   "org.apache.spark" %% "spark-sql" % "2.2.1",
   "org.apache.spark" % "spark-graphx_2.11" % "2.2.1"
+  // ("com.datastax.spark" %% "spark-cassandra-connector" % "2.0.2").exclude("io.netty", "netty-handler"),
+  // ("com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0").exclude("io.netty", "netty-handler")
 )
 
