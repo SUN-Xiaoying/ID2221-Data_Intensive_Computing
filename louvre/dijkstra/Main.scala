@@ -50,8 +50,6 @@ object Main {
     writeFile("d_paralyzed_results.txt",finalResults)
   }
 
-
-
   def main(args: Array[String]){
      
     // Test: Dijkstra 
