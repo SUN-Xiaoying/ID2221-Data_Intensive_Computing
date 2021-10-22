@@ -7,17 +7,24 @@ import org.apache.spark.rdd.RDD
 
 import java.io._
 import src.Dijkstra.dijkstra
-import src.Map.{myGraph, exits}
+import src.Map.{sc, myGraph, exits}
 
 object Main {
+
+  def compare(a:(Double, String), b:(Double, String)) = {
+    if(a._1<b._1) a else b
+  }
+
   //Write results in txt
-  def writeFile(filename: String, lines: Seq[String]): Unit = {
+  def writeFile(filename: String, lines: Seq[(String,(Double, String))]): Unit = {
     val file = new File(filename)
     val bw = new BufferedWriter(new FileWriter(file))
+    var str = ""
     bw.write(s"srcId\tshortest\tpath\n")
     for (line <- lines) {
-      if(!line.contains(s"${Double.MaxValue}"))
-        bw.write(line)
+      str = s"${line._1}\t\t${line._2._1}\t\t${line._2._2}\n"
+      if(!str.contains(s"${Double.MaxValue}"))
+        bw.write(str)
     }
     bw.close()
   }
@@ -26,16 +33,21 @@ object Main {
   def removeSingleNode[VD](g:Graph[VD,Double], miss:VertexId) = {
     // Remove missing vertices as well as the edges to connected to them
     val validGraph = g.subgraph(vpred = (id, attr) => id != miss)
-    var results:Seq[String] = List[String]()
-    
+    var data: Seq[(String,(Double, String))] = Seq[(String,(Double,String))]()
+    var finalResults:Seq[(String,(Double, String))] = Seq[(String,(Double,String))]()
     dijkstra(validGraph, 1L).vertices.map(_._2).collect.foreach(
       r => {
         val arr = r._2.toArray
+        val shortest = arr(0).toString.toDouble
         val path = arr(1).asInstanceOf[List[String]].mkString("->")
-        results = results :+ s"${r._1}\t\t${arr(0)}\t\t${path}\n"
+        data = data :+ (r._1.toString, (shortest,path))
       }
     )
-    writeFile("d_paralyzed.txt",results)
+    val theRDD = sc.parallelize(data)
+    val rddReduced = theRDD.reduceByKey(compare(_,_))
+    rddReduced.collect().foreach(y => finalResults = finalResults :+ (y._1,(y._2._1,y._2._2)))
+    
+    writeFile("d_paralyzed_results.txt",finalResults)
   }
 
 
@@ -43,25 +55,35 @@ object Main {
   def main(args: Array[String]){
      
     // Test: Dijkstra 
-    var results:Seq[String] = Seq[String]()
-
+    var data:Seq[(String,(Double, String))] = Seq[(String,(Double,String))]()
+    var reducedResults:Seq[(String,(Double, String))] = Seq[(String,(Double,String))]()
     def leaveFromExit(exit:VertexId) = {
-      var cur = Seq[String]()
+      var cur:Seq[(String,(Double, String))] = Seq[(String,(Double,String))]()
       dijkstra(myGraph, exit).vertices.map(_._2).collect.foreach(
         r => {
+          val key = r._1.toString
           val arr = r._2.toArray
+          val value = arr(0).toString.toDouble
           val path = arr(1).asInstanceOf[List[String]].mkString("->")
-          cur = cur :+ s"${r._1}\t\t${arr(0)}\t\t${path}\n"
-          results = results :+ s"${r._1}\t\t${arr(0)}\t\t${path}\n"
+          
+          data = data :+ (key, (value,path))
+          cur = cur :+ (key, (value,path))
         }
       )
       writeFile(s"d_${exit}.txt",cur)
     }
+    
+    exits.foreach(exit => leaveFromExit(exit))    
+    writeFile("d_total.txt",data)
 
-    exits.foreach(exit => leaveFromExit(exit))
+    // Reduce the total results by srcId
+    val theRDD = sc.parallelize(data)
+    val rddReduced = theRDD.reduceByKey(compare(_,_))
+    rddReduced.collect().foreach(y => reducedResults = reducedResults :+ y)
+    
+    writeFile("d_reduced_total.txt",reducedResults)
 
-    writeFile("d_total.txt",results)
-    // Test: Paralyzed Nodes
-    removeSingleNode(myGraph, 5L)
+    // // Test: Paralyzed Nodes
+    // removeSingleNode(myGraph, 5L)
   }
 }

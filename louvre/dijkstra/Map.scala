@@ -71,7 +71,7 @@ object Map {
             Edge(12L, 6L, 90.0), 
             Edge(14L, 7L, 125.0),
             Edge(9L, 8L, 60.0),
-            Edge(13L, 9L, 100.0),
+            Edge(13L, 9L, 380.0),
             Edge(4L, 10L, 70.0),
             Edge(9L, 10L, 75.0),
             Edge(11L, 10L, 150.0),
